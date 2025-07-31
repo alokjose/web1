@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Neon To-Do Reminder</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0d0d0d, #1a1a2e);
+      color: #fff;
+      display: flex; flex-direction: column;
+      align-items: center;
+      padding: 30px;
+      animation: pulseGlow 10s infinite alternate;
+    }
+    @keyframes pulseGlow {
+      0% { background-color: #1a1a2e; }
+      100% { background-color: #0d0d0d; }
+    }
+    h1 {
+      font-size: 28px;
+      color: #00ffc3;
+      text-shadow: 0 0 15px #00ffc3;
+      margin-bottom: 20px;
+      animation: pulseText 2s infinite;
+    }
+    @keyframes pulseText {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .container {
+      width: 450px;
+      background-color: #292944;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px #00ffc3;
+    }
+    input, select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #00ffc3;
+      background-color: #1a1a2e;
+      color: #fff;
+      margin-bottom: 10px;
+      width: calc(100% - 24px);
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    button {
+      background: #00ffc3;
+      color: #000;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 15px #00ffc3;
+    }
+    ul {
+      list-style: none;
+      margin-top: 20px;
+      padding: 0;
+    }
+    li {
+      background-color: #3a3a5c;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 0 10px #00ffc3;
+    }
+    .delete-btn {
+      background-color: #ff4f4f;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+    }
+    .stopwatch {
+      margin-top: 30px;
+      text-align: center;
+    }
+    .stopwatch-time {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #00ffc3;
+      text-shadow: 0 0 10px #00ffc3;
+    }
+  </style>
+</head>
+<body>
+  <h1>My Neon To-Do Reminder</h1>
+  <div class="container">
+    <div class="input-group">
+      <input type="text" id="taskInput" placeholder="Add your task...">
+      <input type="time" id="taskTime">
+      <button onclick="addTask()">Add Task with Reminder</button>
+    </div>
+    <ul id="taskList"></ul>
+  </div>
+
+  <!-- ⏱️ Stopwatch Section -->
+  <div class="stopwatch">
+    <div class="stopwatch-time" id="stopwatch">00:00:00</div>
+    <button onclick="startStopwatch()">Start</button>
+    <button onclick="pauseStopwatch()">Pause</button>
+    <button onclick="resetStopwatch()">Reset</button>
+  </div>
+
+  <audio id="alarmSound">
+    <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
+  </audio>
+
+  <script>
+    function addTask() {
+      const input = document.getElementById("taskInput");
+      const time = document.getElementById("taskTime").value;
+      const task = input.value.trim();
+      if (!task || !time) return;
+
+      const li = document.createElement("li");
+      li.innerHTML = `${task} <small>[${time}]</small> <button class="delete-btn" onclick="this.parentElement.remove()">Delete</button>`;
+      document.getElementById("taskList").appendChild(li);
+
+      scheduleReminder(task, time);
+      input.value = "";
+      document.getElementById("taskTime").value = "";
+    }
+
+    function scheduleReminder(task, time) {
+      const [hour, minute] = time.split(":");
+      const now = new Date();
+      const reminder = new Date();
+      reminder.setHours(hour, minute, 0, 0);
+      let delay = reminder.getTime() - now.getTime();
+      if (delay < 0) delay += 86400000; // next day
+
+      setTimeout(() => {
+        alert(`⏰ Reminder: ${task}`);
+        document.getElementById("alarmSound").play();
+      }, delay);
+    }
+
+    // ⏱️ Stopwatch Logic
+    let stopwatchInterval;
+    let timeElapsed = 0;
+
+    function updateStopwatch() {
+      const hrs = String(Math.floor(timeElapsed / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((timeElapsed % 3600) / 60)).padStart(2, '0');
+      const secs = String(timeElapsed % 60).padStart(2, '0');
+      document.getElementById("stopwatch").textContent = `${hrs}:${mins}:${secs}`;
+    }
+
+    function startStopwatch() {
+      if (!stopwatchInterval) {
+        stopwatchInterval = setInterval(() => {
+          timeElapsed++;
+          updateStopwatch();
+        }, 1000);
+      }
+    }
+
+    function pauseStopwatch() {
+      clearInterval(stopwatchInterval);
+      stopwatchInterval = null;
+    }
+
+    function resetStopwatch() {
+      pauseStopwatch();
+      timeElapsed = 0;
+      updateStopwatch();
+    }
+
+    updateStopwatch(); // Initial display
+  </script><canvas id="particleCanvas"></canvas>
+<script>
+const canvas = document.getElementById("particleCanvas");
+const ctx = canvas.getContext("2d");
+canvas.style.position = "fixed";
+canvas.style.top = "0";
+canvas.style.left = "0";
+canvas.style.zIndex = "-1";
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const particles = [];
+const skyShots = [];
+
+class Particle {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.r = 3 + Math.random() * 2;
+    this.speedX = (Math.random() - 0.5) * 1.5;
+    this.speedY = (Math.random() - 0.5) * 1.5;
+    this.color = `rgba(0, 255, 195, ${0.6 + Math.random() * 0.4})`;
+  }
+
+  move() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+    if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+  }
+
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+  }
+}
+
+class SkyShot {
+  constructor(x) {
+    this.x = x;
+    this.y = canvas.height;
+    this.length = 0;
+    this.alpha = 1;
+  }
+
+  update() {
+    this.length += 8;
+    this.alpha -= 0.02;
+  }
+
+  draw() {
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.x, this.y - this.length);
+    ctx.strokeStyle = `rgba(0,255,195,${this.alpha})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+// Initialize particles
+for (let i = 0; i < 40; i++) particles.push(new Particle());
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Move & draw particles
+  for (let p of particles) {
+    p.move();
+    p.draw();
+  }
+
+  // Collision detection
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const a = particles[i], b = particles[j];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (dist < a.r + b.r) {
+        skyShots.push(new SkyShot((a.x + b.x) / 2));
+      }
+    }
+  }
+
+  // Update & draw sky shots
+  for (let i = skyShots.length - 1; i >= 0; i--) {
+    skyShots[i].update();
+    skyShots[i].draw();
+    if (skyShots[i].alpha <= 0) skyShots.splice(i, 1);
+  }
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+
+</body>
+</html>
